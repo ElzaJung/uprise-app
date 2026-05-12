@@ -1,0 +1,190 @@
+Design a complete multi-page web application for “Uprise AI”, a land analysis and marketplace platform.
+
+The product is a two-sided platform:
+1) Land Owners (analyze and list land)
+2) Land Searchers / Collaborators (discover and request land opportunities)
+3) Admins (manage analysis and platform data)
+
+-----------------------------------
+GLOBAL REQUIREMENTS
+-----------------------------------
+- Use a clean, modern SaaS design style (similar to Zillow, LandLogic, Notion dashboards)
+- Use Auto Layout, responsive grids, and reusable components
+- Desktop-first (1440px), but ensure responsive behavior for tablet and mobile
+- Maintain consistent spacing, typography, and component system
+- Use cards, dashboards, and map-based UI patterns
+
+-----------------------------------
+PUBLIC WEBSITE (MARKETING SITE)
+-----------------------------------
+Create these pages:
+
+1. Landing Page
+- Hero with CTA: “Analyze My Land” and “Browse Listings”
+- Value proposition
+- Sector cards (Energy, Agriculture, Community, Tourism)
+- How it works (3 steps)
+- Trust / credibility section
+- Footer
+
+2. About Page
+- What Uprise AI does
+- Problem (unused land, no visibility, no connections)
+- Solution (AI analysis + marketplace)
+- Vision and mission
+
+3. Support / Help Center
+- FAQ (analysis, listings, contacting owners)
+- “How it works” guides
+- Contact support section
+
+-----------------------------------
+AUTHENTICATED APP (PRODUCT)
+-----------------------------------
+
+Create a full dashboard-style application with sidebar navigation.
+
+MAIN NAV STRUCTURE:
+- Dashboard
+- Parcels
+- Listings
+- Requests
+- Analysis
+- Saved / Shortlist
+- Settings
+
+-----------------------------------
+CORE SCREENS
+-----------------------------------
+
+1. Dashboard (Role-based)
+- Land Owner: parcels, listings, requests, analysis status
+- Searcher: saved parcels, sent requests
+- Admin: analysis queue, users, moderation
+
+-----------------------------------
+
+2. Parcel Selection / Map Screen
+- Map view (Mapbox style)
+- Search bar (address input)
+- Select parcel boundaries
+- CTA: “Analyze this parcel”
+
+-----------------------------------
+
+3. Parcel Listing Page (IMPORTANT – HERO SCREEN)
+
+Include:
+
+HEADER:
+- Parcel ID + location
+- Size, ownership
+- Best Use Badge (AI)
+- Viability Score + Confidence Meter
+
+SUMMARY CARDS:
+- Key strengths
+- Key constraints
+- Time-to-feasibility
+- Data completeness
+
+USE-CASE ANALYSIS:
+- Energy / Agriculture / Community / Tourism
+- Score + confidence for each
+- “Why this score” expandable
+
+MAP:
+- Satellite view
+- Layer toggles (zoning, flood risk, slope, roads)
+
+REGULATORY:
+- Zoning summary
+- Required steps
+- Risk flags
+
+ACTIONS:
+- Save
+- Share
+- Export PDF
+- Contact Owner
+
+-----------------------------------
+
+4. Listing Marketplace (MLS-style)
+- Map + list view
+- Filters (size, use-case, score, location)
+- Sort options
+- Listing cards
+
+-----------------------------------
+
+5. Listing Creation Flow
+- Step-by-step form
+- Add parcel
+- Add analysis (optional)
+- Add details
+- Publish
+
+-----------------------------------
+
+6. Analysis Flow (Human-in-the-loop MVP)
+- Request analysis screen
+- Status tracker (pending → reviewing → ready)
+- Admin review dashboard
+
+-----------------------------------
+
+7. Requests / Messaging
+- Inbox system
+- Anonymous vs identified requests
+- Conversation view
+
+-----------------------------------
+
+8. Comparison Tool
+- Compare multiple parcels
+- Compare use-cases on one parcel
+
+-----------------------------------
+
+9. Settings / Profile
+- Role
+- Organization
+- Permissions
+- Sharing controls
+
+-----------------------------------
+
+COMPONENT SYSTEM
+-----------------------------------
+Design reusable components:
+- Score cards
+- Confidence meter
+- Tag badges (Energy, Agri, etc.)
+- Buttons & forms
+- Map controls
+- Listing cards
+- Filter chips
+
+-----------------------------------
+
+UX DETAILS
+-----------------------------------
+- Include onboarding flow for new users
+- Add empty states (no listings, no parcels)
+- Add loading states
+- Include tooltips explaining AI scores
+- Show “data missing” or “low confidence” states
+
+-----------------------------------
+
+OUTPUT FORMAT
+-----------------------------------
+- Organize frames into pages:
+  1. Marketing Site
+  2. Auth Flow
+  3. Owner Flow
+  4. Searcher Flow
+  5. Admin Flow
+- Use clear labels and flow arrows
+- Use consistent design system across all screens
