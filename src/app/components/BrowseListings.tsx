@@ -30,8 +30,15 @@ interface Listing {
   land_value?: number;
   terms?: string;
   status: string;
-  sectors?: string[];
-  description?: string;
+  sectors?: Array<string | { id: string; name: string }>;
+  description?: {
+    typography?: string;
+    access_infrastructure?: string;
+    opportunity_summary?: string;
+    visible_constraints?: string;
+    confidence_score?: number;
+    confidence_explanation?: string;
+  } | string | null;
   owner_id?: string;
   owner_email?: string;
   created_at?: string;
@@ -118,7 +125,10 @@ export default function BrowseListings() {
 
     // Sector Logic
     if (selectedSectors.length > 0) {
-      if (!listing.sectors?.some((sector) => selectedSectors.includes(sector))) {
+      if (!listing.sectors?.some((sector) => {
+        const id = typeof sector === 'object' ? sector.id : sector;
+        return selectedSectors.includes(id);
+      })) {
         return false;
       }
     }
@@ -558,17 +568,17 @@ export default function BrowseListings() {
                       <span className="text-sm line-clamp-1">{listing.address}</span>
                     </div>
 
-                    {/* Tags */}
                     <div className="flex flex-wrap gap-2 mb-6 mt-auto">
-                      {listing.sectors?.map((sectorId) => {
+                      {listing.sectors?.map((sectorItem) => {
+                        const sectorId = typeof sectorItem === 'object' ? sectorItem.id : sectorItem;
                         const sector = SECTORS.find((s) => s.id === sectorId);
                         return (
                           <span
                             key={sectorId}
                             className="px-2.5 py-1 bg-slate-50 text-slate-600 text-xs font-semibold rounded-md border border-slate-200 flex items-center gap-1.5"
                           >
-                            <span>{sector?.icon}</span>
-                            {sector?.name}
+                            <span>{sector?.icon || '📍'}</span>
+                            {sector?.name || (typeof sectorItem === 'object' ? sectorItem.name : sectorItem)}
                           </span>
                         );
                       })}

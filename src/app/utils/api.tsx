@@ -5,7 +5,7 @@ const EDGE_FUNCTION_URL = 'https://luokxzkqekitqdmzvrhf.supabase.co/functions/v1
 
 async function getAuthHeaders() {
   const { data: { session } } = await supabase.auth.getSession();
-  
+
   return {
     'Authorization': `Bearer ${publicAnonKey}`,
     'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ export const listingsAPI = {
     try {
       const url = `${EDGE_FUNCTION_URL}/api/listings/${id}`;
       console.log('Fetching listing from:', url);
-      
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
@@ -72,15 +72,15 @@ export const listingsAPI = {
           'Content-Type': 'application/json',
         },
       });
-      
+
       console.log('Response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Response error:', errorText);
         throw new Error(`Failed to fetch listing: ${response.status} - ${errorText}`);
       }
-      
+
       const data = await response.json();
       console.log('Fetched listing:', data);
       return data.listing;
@@ -94,18 +94,18 @@ export const listingsAPI = {
   async create(listingData: any) {
     try {
       const headers = await getAuthHeaders();
-      
+
       const response = await fetch(`${EDGE_FUNCTION_URL}/api/listings`, {
         method: 'POST',
         headers,
         body: JSON.stringify(listingData),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to create listing');
       }
-      
+
       const data = await response.json();
       return data.listing;
     } catch (error) {
@@ -118,18 +118,18 @@ export const listingsAPI = {
   async update(id: string, updates: any) {
     try {
       const headers = await getAuthHeaders();
-      
+
       const response = await fetch(`${EDGE_FUNCTION_URL}/api/listings/${id}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(updates),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to update listing');
       }
-      
+
       const data = await response.json();
       return data.listing;
     } catch (error) {
@@ -144,16 +144,16 @@ export const parcelsAPI = {
   async getAll() {
     try {
       const headers = await getAuthHeaders();
-      
+
       const response = await fetch(`${EDGE_FUNCTION_URL}/api/parcels`, {
         method: 'GET',
         headers,
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch parcels');
       }
-      
+
       const data = await response.json();
       return data.parcels || [];
     } catch (error) {

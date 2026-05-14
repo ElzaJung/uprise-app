@@ -160,7 +160,7 @@ async function initializeSampleListings() {
 }
 
 // Initialize sample listings
-initializeSampleListings();
+// initializeSampleListings();
 
 // AI Analyzer Helper Functions
 const MODEL_PROVIDER = "openai";
@@ -707,26 +707,51 @@ app.get("/make-server-bf94089b/api/listings", async (c) => {
     const sectorsParam = c.req.query('sectors');
     const sectors = sectorsParam ? sectorsParam.split(',') : [];
 
-    // Get all listing IDs from KV store
-    const allListingIds = await kv.get('all_listings') || [];
+    const { data: listingsData, error } = await supabase
+      .from('listing')
+      .select(`
+        *,
+        listing_description (*),
+        listing_categories (
+          categories (id, name)
+        ),
+        listing_contacts (
+          contacts (id, name, email, phone)
+        )
+      `);
 
-    const listings = [];
-    for (const id of allListingIds) {
-      const listing = await kv.get(`listing:${id}`);
-      if (listing && listing.status === 'published') {
-        // Filter by sectors if specified
-        if (sectors.length > 0) {
-          const listingSectors = listing.sectors || [];
-          const hasMatchingSector = sectors.some((s: string) =>
-            listingSectors.includes(s.trim())
-          );
-          if (hasMatchingSector) {
-            listings.push(listing);
-          }
-        } else {
-          listings.push(listing);
-        }
-      }
+    if (error) {
+      throw error;
+    }
+
+    let listings = (listingsData || []).map((row: any) => {
+      const rowSectors = row.listing_categories?.map((lc: any) => lc.categories?.name).filter(Boolean) || [];
+      const rowCategories = row.listing_categories?.map((lc: any) => lc.categories).filter(Boolean) || [];
+      const rowContacts = row.listing_contacts?.map((lc: any) => lc.contacts).filter(Boolean) || [];
+      return {
+        id: row.id,
+        title: row.title,
+        address: row.address,
+        developable_area_acres: row.developable_area_acres,
+        buildable_floor_area_sqft: row.buildable_floor_area_sqft,
+        land_value: row.land_value,
+        terms: row.terms,
+        description: row.listing_description?.[0] || null,
+        sectors: rowSectors,
+        categories: rowCategories,
+        contacts: rowContacts,
+        status: 'published', // Missing in DB schema, mocked for frontend
+        owner_id: 'system', // Missing in DB schema
+        owner_email: 'demo@uprise.ai', // Missing in DB schema
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    });
+
+    if (sectors.length > 0) {
+      listings = listings.filter((listing: any) =>
+        sectors.some((s: string) => listing.sectors.includes(s.trim()))
+      );
     }
 
     return c.json({ listings });
@@ -740,11 +765,46 @@ app.get("/make-server-bf94089b/api/listings", async (c) => {
 app.get("/make-server-bf94089b/api/listings/:id", async (c) => {
   try {
     const listingId = c.req.param('id');
-    const listing = await kv.get(`listing:${listingId}`);
+    const { data: row, error } = await supabase
+      .from('listing')
+      .select(`
+        *,
+        listing_description (*),
+        listing_categories (
+          categories (id, name)
+        ),
+        listing_contacts (
+          contacts (id, name, email, phone)
+        )
+      `)
+      .eq('id', listingId)
+      .single();
 
-    if (!listing) {
+    if (error || !row) {
       return c.json({ error: 'Listing not found' }, 404);
     }
+
+    const rowSectors = row.listing_categories?.map((lc: any) => lc.categories?.name).filter(Boolean) || [];
+    const rowCategories = row.listing_categories?.map((lc: any) => lc.categories).filter(Boolean) || [];
+    const rowContacts = row.listing_contacts?.map((lc: any) => lc.contacts).filter(Boolean) || [];
+    const listing = {
+      id: row.id,
+      title: row.title,
+      address: row.address,
+      developable_area_acres: row.developable_area_acres,
+      buildable_floor_area_sqft: row.buildable_floor_area_sqft,
+      land_value: row.land_value,
+      terms: row.terms,
+      description: row.listing_description?.[0] || null,
+      sectors: rowSectors,
+      categories: rowCategories,
+      contacts: rowContacts,
+      status: 'published',
+      owner_id: 'system',
+      owner_email: 'demo@uprise.ai',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
     return c.json({ listing });
   } catch (error: any) {
@@ -769,43 +829,94 @@ app.post("/make-server-bf94089b/api/listings", async (c) => {
     }
 
     const body = await c.req.json();
-    const listingId = crypto.randomUUID();
-    const timestamp = new Date().toISOString();
 
-    const listing = {
-      id: listingId,
-      owner_id: user.id,
-      owner_email: user.email,
-      title: body.title || '',
-      address: body.address || '',
-      developable_area_acres: body.developable_area_acres || 0,
-      buildable_floor_area_sqft: body.buildable_floor_area_sqft || 0,
-      land_value: body.land_value || 0,
-      terms: body.terms || '',
-      description: body.description || '',
-      sectors: body.sectors || [],
-      status: body.status || 'draft',
-      created_at: timestamp,
-      updated_at: timestamp,
-    };
+    // Insert listing
+    const { data: insertedListing, error: insertError } = await supabase
+      .from('listing')
+      .insert({
+        title: body.title || '',
+        address: body.address || '',
+        developable_area_acres: body.developable_area_acres || null,
+        buildable_floor_area_sqft: body.buildable_floor_area_sqft || null,
+        land_value: body.land_value || null,
+        terms: body.terms || '',
+      })
+      .select()
+      .single();
 
-    // Save listing
-    await kv.set(`listing:${listingId}`, listing);
+    if (insertError) throw insertError;
+    const listingId = insertedListing.id;
 
-    // Add to all listings index
-    const allListings = await kv.get('all_listings') || [];
-    allListings.push(listingId);
-    await kv.set('all_listings', allListings);
+    // Insert description
+    if (body.description) {
+      await supabase.from('listing_description').insert({
+        listing_id: listingId,
+        opportunity_summary: body.description,
+      });
+    }
 
-    // Add to user's listings
-    const userListingsKey = `user_listings:${user.id}`;
-    const userListings = await kv.get(userListingsKey) || [];
-    userListings.push(listingId);
-    await kv.set(userListingsKey, userListings);
+    // Process sectors/categories
+    const sectors = body.sectors || [];
+    for (const sector of sectors) {
+      // Find or create category
+      let { data: category } = await supabase.from('categories').select('id').eq('name', sector).single();
+      if (!category) {
+        const { data: newCategory, error: catError } = await supabase.from('categories').insert({ name: sector }).select().single();
+        if (!catError && newCategory) {
+          category = newCategory;
+        }
+      }
+
+      if (category) {
+        await supabase.from('listing_categories').insert({
+          listing_id: listingId,
+          category_id: category.id,
+        });
+      }
+    }
 
     console.log('Listing created successfully:', listingId);
 
-    return c.json({ listing });
+    // Fetch the newly created listing to return it in the expected format
+    const { data: row } = await supabase
+      .from('listing')
+      .select(`
+        *,
+        listing_description (*),
+        listing_categories (
+          categories (id, name)
+        ),
+        listing_contacts (
+          contacts (id, name, email, phone)
+        )
+      `)
+      .eq('id', listingId)
+      .single();
+
+    const rowSectors = row?.listing_categories?.map((lc: any) => lc.categories?.name).filter(Boolean) || [];
+    const rowCategories = row?.listing_categories?.map((lc: any) => lc.categories).filter(Boolean) || [];
+    const rowContacts = row?.listing_contacts?.map((lc: any) => lc.contacts).filter(Boolean) || [];
+
+    return c.json({
+      listing: {
+        id: row?.id || listingId,
+        title: row?.title || body.title,
+        address: row?.address || body.address,
+        developable_area_acres: row?.developable_area_acres,
+        buildable_floor_area_sqft: row?.buildable_floor_area_sqft,
+        land_value: row?.land_value,
+        terms: row?.terms,
+        description: row?.listing_description?.[0] || null,
+        sectors: rowSectors,
+        categories: rowCategories,
+        contacts: rowContacts,
+        status: 'published',
+        owner_id: user.id,
+        owner_email: user.email,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    });
   } catch (error: any) {
     console.error('Error creating listing:', error);
     return c.json({ error: 'Failed to create listing: ' + error.message }, 500);
@@ -828,33 +939,110 @@ app.put("/make-server-bf94089b/api/listings/:id", async (c) => {
       return c.json({ error: 'Invalid authentication' }, 401);
     }
 
-    // Get existing listing
-    const existingListing = await kv.get(`listing:${listingId}`);
-    if (!existingListing) {
+    // Get existing listing to ensure it exists
+    const { data: existingListing, error: fetchError } = await supabase
+      .from('listing')
+      .select('id')
+      .eq('id', listingId)
+      .single();
+
+    if (fetchError || !existingListing) {
       return c.json({ error: 'Listing not found' }, 404);
     }
 
-    // Verify ownership
-    if (existingListing.owner_id !== user.id) {
-      return c.json({ error: 'Unauthorized - you do not own this listing' }, 403);
+    const updates = await c.req.json();
+
+    // Update listing table
+    const listingUpdates: any = {};
+    if (updates.title !== undefined) listingUpdates.title = updates.title;
+    if (updates.address !== undefined) listingUpdates.address = updates.address;
+    if (updates.developable_area_acres !== undefined) listingUpdates.developable_area_acres = updates.developable_area_acres;
+    if (updates.buildable_floor_area_sqft !== undefined) listingUpdates.buildable_floor_area_sqft = updates.buildable_floor_area_sqft;
+    if (updates.land_value !== undefined) listingUpdates.land_value = updates.land_value;
+    if (updates.terms !== undefined) listingUpdates.terms = updates.terms;
+
+    if (Object.keys(listingUpdates).length > 0) {
+      await supabase
+        .from('listing')
+        .update(listingUpdates)
+        .eq('id', listingId);
     }
 
-    const updates = await c.req.json();
-    const timestamp = new Date().toISOString();
+    // Update description
+    if (updates.description !== undefined) {
+      const { data: descRow } = await supabase.from('listing_description').select('id').eq('listing_id', listingId).maybeSingle();
+      if (descRow) {
+        await supabase.from('listing_description').update({ opportunity_summary: updates.description }).eq('listing_id', listingId);
+      } else {
+        await supabase.from('listing_description').insert({ listing_id: listingId, opportunity_summary: updates.description });
+      }
+    }
 
-    const updatedListing = {
-      ...existingListing,
-      ...updates,
-      id: listingId, // Prevent ID from being changed
-      owner_id: existingListing.owner_id, // Prevent owner from being changed
-      updated_at: timestamp,
-    };
+    // Update sectors
+    if (updates.sectors !== undefined) {
+      // First delete all existing category links
+      await supabase.from('listing_categories').delete().eq('listing_id', listingId);
 
-    await kv.set(`listing:${listingId}`, updatedListing);
+      // Add new ones
+      for (const sector of updates.sectors) {
+        let { data: category } = await supabase.from('categories').select('id').eq('name', sector).single();
+        if (!category) {
+          const { data: newCategory, error: catError } = await supabase.from('categories').insert({ name: sector }).select().single();
+          if (!catError && newCategory) {
+            category = newCategory;
+          }
+        }
+        if (category) {
+          await supabase.from('listing_categories').insert({
+            listing_id: listingId,
+            category_id: category.id,
+          });
+        }
+      }
+    }
 
     console.log('Listing updated successfully:', listingId);
 
-    return c.json({ listing: updatedListing });
+    // Fetch updated listing to return
+    const { data: row } = await supabase
+      .from('listing')
+      .select(`
+        *,
+        listing_description (*),
+        listing_categories (
+          categories (id, name)
+        ),
+        listing_contacts (
+          contacts (id, name, email, phone)
+        )
+      `)
+      .eq('id', listingId)
+      .single();
+
+    const rowSectors = row?.listing_categories?.map((lc: any) => lc.categories?.name).filter(Boolean) || [];
+    const rowCategories = row?.listing_categories?.map((lc: any) => lc.categories).filter(Boolean) || [];
+    const rowContacts = row?.listing_contacts?.map((lc: any) => lc.contacts).filter(Boolean) || [];
+
+    return c.json({
+      listing: {
+        id: row?.id || listingId,
+        title: row?.title,
+        address: row?.address,
+        developable_area_acres: row?.developable_area_acres,
+        buildable_floor_area_sqft: row?.buildable_floor_area_sqft,
+        land_value: row?.land_value,
+        terms: row?.terms,
+        description: row?.listing_description?.[0] || null,
+        sectors: rowSectors,
+        categories: rowCategories,
+        contacts: rowContacts,
+        status: 'published',
+        owner_id: user.id,
+        owner_email: user.email,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+    });
   } catch (error: any) {
     console.error('Error updating listing:', error);
     return c.json({ error: 'Failed to update listing: ' + error.message }, 500);

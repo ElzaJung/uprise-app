@@ -57,7 +57,7 @@ export default function OwnerDashboard() {
 
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
+
         if (sessionError) {
           console.error("Session error:", sessionError);
           setParcels([]);
@@ -66,7 +66,7 @@ export default function OwnerDashboard() {
         }
 
         const token = session?.access_token;
-        
+
         if (!token) {
           console.error("No access token available");
           setParcels([]);
@@ -89,15 +89,15 @@ export default function OwnerDashboard() {
         if (!response.ok) {
           const errText = await response.text();
           let err;
-          try { err = JSON.parse(errText); } catch(e) { err = errText; }
+          try { err = JSON.parse(errText); } catch (e) { err = errText; }
           console.error("Failed to fetch parcels", err);
-          
+
           if (response.status === 401 && err?.error === "Invalid session token") {
             await supabase.auth.signOut();
             window.location.href = '/role-select';
             return;
           }
-          
+
           setParcels([]);
         } else {
           const result = await response.json();
@@ -117,19 +117,19 @@ export default function OwnerDashboard() {
   const handleSendReply = (id: string) => {
     if (!replyText.trim()) return;
 
-    setRequests(prev => prev.map(req => 
+    setRequests(prev => prev.map(req =>
       req.id === id ? { ...req, status: 'replied', replyMessage: replyText } : req
     ));
     setActiveReplyId(null);
     setReplyText('');
-    
+
     setShowSuccessToast(true);
     setTimeout(() => setShowSuccessToast(false), 3000);
   };
 
   return (
     <div className="relative w-full h-full max-w-6xl mx-auto pb-20">
-      
+
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
@@ -249,23 +249,21 @@ export default function OwnerDashboard() {
               {requests.map((request) => {
                 const isReplying = activeReplyId === request.id;
                 return (
-                  <div 
-                    key={request.id} 
-                    className={`p-5 rounded-xl border transition-all ${
-                      request.status === 'new' 
-                        ? 'border-emerald-200 bg-emerald-50/50 shadow-sm' 
+                  <div
+                    key={request.id}
+                    className={`p-5 rounded-xl border transition-all ${request.status === 'new'
+                        ? 'border-emerald-200 bg-emerald-50/50 shadow-sm'
                         : 'border-gray-200 bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <div className="flex justify-between items-start mb-3 gap-4">
                       <div>
                         <div className="flex items-center gap-3 mb-1">
                           <h3 className="font-bold text-gray-900">{request.senderName}</h3>
-                          <span className={`px-2.5 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-full ${
-                            request.status === 'new'
+                          <span className={`px-2.5 py-0.5 text-[10px] uppercase tracking-wider font-bold rounded-full ${request.status === 'new'
                               ? 'bg-emerald-100 text-emerald-800'
                               : 'bg-gray-200 text-gray-700'
-                          }`}>
+                            }`}>
                             {request.status === 'new' ? 'New' : 'Replied'}
                           </span>
                         </div>
@@ -277,7 +275,7 @@ export default function OwnerDashboard() {
                         {new Date(request.date).toLocaleDateString()}
                       </span>
                     </div>
-                    
+
                     <p className="text-sm text-gray-600 mb-4 leading-relaxed bg-white p-3 rounded-lg border border-gray-100 shadow-sm italic">
                       "{request.message}"
                     </p>
@@ -285,16 +283,15 @@ export default function OwnerDashboard() {
                     {/* Action Button Row (hidden when replying) */}
                     {!isReplying && !request.replyMessage && (
                       <div className="flex items-center justify-end">
-                        <button 
+                        <button
                           onClick={() => {
                             setActiveReplyId(request.id);
                             setReplyText('');
                           }}
-                          className={`text-sm font-semibold px-4 py-2 rounded-lg transition-colors ${
-                            request.status === 'new'
+                          className={`text-sm font-semibold px-4 py-2 rounded-lg transition-colors ${request.status === 'new'
                               ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
                               : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                          }`}
+                            }`}
                         >
                           Reply
                         </button>
@@ -343,7 +340,7 @@ export default function OwnerDashboard() {
 
                     {/* Display Sent Reply if exists */}
                     {!isReplying && request.replyMessage && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: -5 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="mt-4 flex items-start gap-2 pt-4 border-t border-gray-200/60"
@@ -366,7 +363,7 @@ export default function OwnerDashboard() {
       {/* Success Toast */}
       <AnimatePresence>
         {showSuccessToast && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
@@ -374,8 +371,8 @@ export default function OwnerDashboard() {
           >
             <CheckCircle className="w-6 h-6 text-emerald-500" />
             <span className="text-sm font-bold text-emerald-800">Reply sent successfully!</span>
-            <button 
-              onClick={() => setShowSuccessToast(false)} 
+            <button
+              onClick={() => setShowSuccessToast(false)}
               className="ml-4 p-1 rounded-full text-emerald-600 hover:bg-emerald-100/50 transition-colors"
             >
               <X className="w-4 h-4" />

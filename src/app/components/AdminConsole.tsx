@@ -61,31 +61,28 @@ export default function AdminConsole() {
           <div className="flex w-max min-w-full">
             <button
               onClick={() => setActiveTab('queue')}
-              className={`px-6 py-4 text-sm sm:text-base font-semibold transition-all border-b-2 whitespace-nowrap ${
-                activeTab === 'queue'
+              className={`px-6 py-4 text-sm sm:text-base font-semibold transition-all border-b-2 whitespace-nowrap ${activeTab === 'queue'
                   ? 'border-purple-600 text-purple-700 bg-purple-50/30'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/50'
-              }`}
+                }`}
             >
               Analysis Queue
             </button>
             <button
               onClick={() => setActiveTab('users')}
-              className={`px-6 py-4 text-sm sm:text-base font-semibold transition-all border-b-2 whitespace-nowrap ${
-                activeTab === 'users'
+              className={`px-6 py-4 text-sm sm:text-base font-semibold transition-all border-b-2 whitespace-nowrap ${activeTab === 'users'
                   ? 'border-purple-600 text-purple-700 bg-purple-50/30'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/50'
-              }`}
+                }`}
             >
               Users
             </button>
             <button
               onClick={() => setActiveTab('parcels')}
-              className={`px-6 py-4 text-sm sm:text-base font-semibold transition-all border-b-2 whitespace-nowrap ${
-                activeTab === 'parcels'
+              className={`px-6 py-4 text-sm sm:text-base font-semibold transition-all border-b-2 whitespace-nowrap ${activeTab === 'parcels'
                   ? 'border-purple-600 text-purple-700 bg-purple-50/30'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/50'
-              }`}
+                }`}
             >
               Parcels
             </button>
@@ -141,11 +138,10 @@ export default function AdminConsole() {
                           {user.role}
                         </span>
                         <span
-                          className={`px-3 py-1 text-xs font-bold rounded-full tracking-wide uppercase ${
-                            user.status === 'active'
+                          className={`px-3 py-1 text-xs font-bold rounded-full tracking-wide uppercase ${user.status === 'active'
                               ? 'bg-green-100 text-green-800'
                               : 'bg-yellow-100 text-yellow-800'
-                          }`}
+                            }`}
                         >
                           {user.status}
                         </span>
@@ -172,11 +168,10 @@ export default function AdminConsole() {
                         <p className="text-sm text-gray-500 mt-1">Owner: <span className="font-medium text-gray-900">{parcel.owner}</span></p>
                       </div>
                       <span
-                        className={`w-fit px-3 py-1 text-xs font-bold rounded-full tracking-wide uppercase ${
-                          parcel.status === 'analyzed'
+                        className={`w-fit px-3 py-1 text-xs font-bold rounded-full tracking-wide uppercase ${parcel.status === 'analyzed'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-yellow-100 text-yellow-800'
-                        }`}
+                          }`}
                       >
                         {parcel.status}
                       </span>

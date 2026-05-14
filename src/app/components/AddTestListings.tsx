@@ -69,22 +69,22 @@ export default function AddTestListings() {
   const handleCreateListings = async () => {
     setIsCreating(true);
     setResults([]);
-    
+
     const newResults: { success: boolean; title: string; error?: string }[] = [];
-    
+
     for (const listing of TEST_LISTINGS) {
       try {
         await listingsAPI.create(listing);
         newResults.push({ success: true, title: listing.title });
       } catch (error: any) {
-        newResults.push({ 
-          success: false, 
-          title: listing.title, 
-          error: error.message 
+        newResults.push({
+          success: false,
+          title: listing.title,
+          error: error.message
         });
       }
     }
-    
+
     setResults(newResults);
     setIsCreating(false);
   };
@@ -92,7 +92,7 @@ export default function AddTestListings() {
   return (
     <div className="min-h-screen bg-gray-50/50 flex flex-col py-12 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-[800px]">
-        
+
         {/* Header */}
         <div className="mb-8">
           <button
@@ -125,13 +125,12 @@ export default function AddTestListings() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">Results</h2>
             <div className="space-y-3">
               {results.map((result, index) => (
-                <div 
+                <div
                   key={index}
-                  className={`p-4 rounded-lg border flex items-start gap-3 ${
-                    result.success 
-                      ? 'bg-emerald-50 border-emerald-200' 
+                  className={`p-4 rounded-lg border flex items-start gap-3 ${result.success
+                      ? 'bg-emerald-50 border-emerald-200'
                       : 'bg-red-50 border-red-200'
-                  }`}
+                    }`}
                 >
                   {result.success ? (
                     <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />

@@ -11,7 +11,7 @@ interface ListingData {
   buildable_floor_area_sqft?: number;
   land_value?: number;
   terms?: string;
-  categories?: string[];
+  categories?: Array<{ id: string; name: string }>;
   contacts?: Array<{
     id: string;
     name: string;
@@ -35,7 +35,7 @@ export default function PublicListing() {
   const [contactMessage, setContactMessage] = useState('');
   const [contactType, setContactType] = useState<'anonymous' | 'identified'>('identified');
   const [isSaved, setIsSaved] = useState(false);
-  
+
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export default function PublicListing() {
 
   const fetchListing = async () => {
     if (!listingId) return;
-    
+
     try {
       setIsLoading(true);
       setError(null);
@@ -94,11 +94,10 @@ export default function PublicListing() {
             </button>
             <button
               onClick={handleSave}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                isSaved
-                  ? 'bg-red-50 text-red-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isSaved
+                ? 'bg-red-50 text-red-600'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
               <Heart className={`size-5 ${isSaved ? 'fill-current' : ''}`} />
               {isSaved ? 'Saved' : 'Save'}
@@ -150,11 +149,11 @@ export default function PublicListing() {
                     {listing.categories && listing.categories.length > 0 && (
                       <div className="flex items-center gap-3">
                         {listing.categories.map((category, index) => (
-                          <span 
+                          <span
                             key={index}
                             className="px-4 py-2 bg-emerald-100 text-emerald-800 font-medium rounded-full"
                           >
-                            {category}
+                            {typeof category === 'object' ? category.name : category}
                           </span>
                         ))}
                       </div>
@@ -238,8 +237,8 @@ export default function PublicListing() {
                         </div>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                        <div 
-                          className="bg-emerald-600 h-2.5 rounded-full" 
+                        <div
+                          className="bg-emerald-600 h-2.5 rounded-full"
                           style={{ width: `${Math.round(listing.description.confidence_score * 100)}%` }}
                         ></div>
                       </div>
@@ -283,7 +282,7 @@ export default function PublicListing() {
               {showContactForm && (
                 <div className="bg-white rounded-xl shadow-lg p-8">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Send Collaboration Request</h2>
-                  
+
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Contact Preference
@@ -291,22 +290,20 @@ export default function PublicListing() {
                     <div className="flex gap-4">
                       <button
                         onClick={() => setContactType('identified')}
-                        className={`flex-1 p-4 rounded-lg border-2 transition-all ${
-                          contactType === 'identified'
-                            ? 'border-emerald-600 bg-emerald-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
+                        className={`flex-1 p-4 rounded-lg border-2 transition-all ${contactType === 'identified'
+                          ? 'border-emerald-600 bg-emerald-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                          }`}
                       >
                         <p className="font-semibold text-gray-900 mb-1">Share My Info</p>
                         <p className="text-sm text-gray-600">Owner can see your name and contact info</p>
                       </button>
                       <button
                         onClick={() => setContactType('anonymous')}
-                        className={`flex-1 p-4 rounded-lg border-2 transition-all ${
-                          contactType === 'anonymous'
-                            ? 'border-emerald-600 bg-emerald-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
+                        className={`flex-1 p-4 rounded-lg border-2 transition-all ${contactType === 'anonymous'
+                          ? 'border-emerald-600 bg-emerald-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                          }`}
                       >
                         <p className="font-semibold text-gray-900 mb-1">Anonymous</p>
                         <p className="text-sm text-gray-600">Communicate through the platform</p>
