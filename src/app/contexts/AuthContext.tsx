@@ -56,15 +56,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.log('🔍 Hash params:', Array.from(hashParams.keys()));
         console.log('🔍 Search params:', Array.from(urlParams.keys()));
 
-        const hasOAuthParams = hashParams.has('access_token') || urlParams.has('code') || hashParams.has('error');
+        const hasOAuthParams = hashParams.has('access_token') || urlParams.has('code') || hashParams.has('error') || urlParams.has('error');
         if (hasOAuthParams) {
           console.log('✅ OAuth callback detected in URL!');
           console.log('🔗 Hash params:', Object.fromEntries(hashParams));
           console.log('🔗 URL search params:', Object.fromEntries(urlParams));
 
-          if (hashParams.has('error')) {
-            console.error('❌ OAuth error in URL:', hashParams.get('error'));
-            console.error('❌ OAuth error description:', hashParams.get('error_description'));
+          const error = hashParams.get('error') || urlParams.get('error');
+          const errorCode = hashParams.get('error_code') || urlParams.get('error_code');
+          const errorDesc = hashParams.get('error_description') || urlParams.get('error_description');
+
+          if (error) {
+            console.error('❌ OAuth error in URL:', error);
+            console.error('❌ OAuth error description:', errorDesc);
+            
+            if (errorCode === 'bad_oauth_state') {
+              alert("Authentication failed due to browser cookie settings. Please try again. If you are using Incognito mode or Safari, try allowing third-party cookies.");
+            }
+          }
+
+          // Manually process implicit flow tokens if present
+          if (hashParams.has('access_token') && hashParams.has('refresh_token')) {
+            console.log('🔧 Manually setting session from URL hash...');
+            const { error: setSessionError } = await supabase.auth.setSession({
+              access_token: hashParams.get('access_token')!,
+              refresh_token: hashParams.get('refresh_token')!
+            });
+            
+            if (setSessionError) {
+              console.error('❌ Error manually setting session:', setSessionError);
+            } else {
+              console.log('✅ Session manually set successfully!');
+              // Clear the hash so we don't process it again
+              window.history.replaceState(null, '', window.location.pathname + window.location.search);
+            }
           }
         } else {
           console.log('ℹ️ No OAuth parameters in URL');
@@ -257,12 +282,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const loginWithOAuth = async (provider: 'google' | 'github') => {
     console.log(`🔐 Starting OAuth login with ${provider}`);
-    console.log(`🔗 Redirect URL: ${window.location.origin}/land_analyzer`);
+    console.log(`🔗 Redirect URL: ${window.location.origin}/`);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/land_analyzer`,
+        redirectTo: `${window.location.origin}/`,
       },
     });
 
